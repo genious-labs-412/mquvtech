@@ -1,0 +1,46 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  createdAt DateTime @default(now())
+}
+
+
+model ContactDetails {
+  id          Int      @id @default(autoincrement())
+
+  fullName    String
+  phone       String
+  email       String
+
+  company     String?
+  service     String?
+  scope       String?
+
+  fileUrl     String?
+
+  createdAt   DateTime @default(now())
+
+  @@map("contact-details")
+}
+model Project {
+  id             String   @id @default(cuid())
+
+  title          String
+  slug           String   @unique
+
+  thumbnailImage String?
+
+  content        Json?
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
