@@ -1,90 +1,134 @@
-// 'use client';
+'use client';
 
-// import { useState } from 'react';
-// import { useParams, useRouter } from 'next/navigation';
-// import { projects } from '@/constants/index';
+import { useEffect, useState } from 'react';
+import Image from 'next/image';
+import TiptapEditor from '@/components/TiptapEditor';
+import { useParams } from 'next/navigation';
 
-// export default function EditProjectPage() {
+export default function EditProjectPage() {
 
-//   const params = useParams();
-//   const router = useRouter();
+    const params = useParams();
 
-//   const project = projects.find(
-//     (item) => item.id === Number(params.id)
-//   );
+    const id = params.id;
 
-//   if (!project) {
-//     return (
-//       <div className="min-h-screen bg-black text-white flex items-center justify-center">
-//         Project not found
-//       </div>
-//     );
-//   }
+    const [title, setTitle] = useState('');
+    const [content, setContent] = useState({});
+    const [thumbnailImage, setThumbnailImage] = useState('');
 
-//   const [title, setTitle] = useState(project.title);
-//   const [description, setDescription] = useState(
-//     project.shortDescription
-//   );
+    const [loading, setLoading] = useState(false);
 
-//   const handleUpdate = (e: React.FormEvent) => {
-//     e.preventDefault();
+    // fetch project
+    useEffect(() => {
 
-//     project.title = title;
-//     project.shortDescription = description;
+        const fetchProject = async () => {
 
-//     alert('Project updated successfully');
+            const res = await fetch(`/api/projects/${id}`, {
+                cache: 'no-store',
+            })
 
-//     router.push('/admin/projects');
-//   };
+            const data = await res.json();
 
-//   return (
-//     <div className="min-h-screen bg-black text-white p-10">
+            setTitle(data.title);
+            setContent(data.content);
+            setThumbnailImage(data.thumbnailImage);
 
-//       <h1 className="text-5xl font-bold mb-10">
-//         Edit Project
-//       </h1>
+        };
 
-//       <form
-//         onSubmit={handleUpdate}
-//         className="max-w-3xl space-y-6"
-//       >
+        if (id) {
+            fetchProject();
+        }
 
-//         {/* TITLE */}
-//         <div className="space-y-2">
-//           <label className="text-sm text-gray-400">
-//             Project Title
-//           </label>
+    }, [id]);
 
-//           <input
-//             type="text"
-//             value={title}
-//             onChange={(e) => setTitle(e.target.value)}
-//             className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-5 py-4"
-//           />
-//         </div>
+    // update project
+    const handleUpdate = async () => {
 
-//         {/* DESCRIPTION */}
-//         <div className="space-y-2">
-//           <label className="text-sm text-gray-400">
-//             Short Description
-//           </label>
+        try {
 
-//           <textarea
-//             value={description}
-//             onChange={(e) => setDescription(e.target.value)}
-//             className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-5 py-4 h-40"
-//           />
-//         </div>
+            setLoading(true);
 
-//         {/* BUTTON */}
-//         <button
-//           type="submit"
-//           className="bg-white text-black px-8 py-4 rounded-xl font-semibold"
-//         >
-//           Update Project
-//         </button>
+            const res = await fetch(`/api/projects/${id}`, {
 
-//       </form>
-//     </div>
-//   );
-// }
+                method: 'PUT',
+
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+
+                body: JSON.stringify({
+                    title,
+                    content,
+                    thumbnailImage,
+                }),
+            });
+
+            const data = await res.json();
+
+            console.log(data);
+
+            alert('Project Updated');
+
+        } catch (error) {
+
+            console.log(error);
+
+            alert('Something went wrong');
+
+        } finally {
+
+            setLoading(false);
+        }
+    };
+
+    return (
+
+        <div className="min-h-screen bg-black text-white p-10">
+
+            <div className="max-w-5xl mx-auto space-y-8">
+
+                <h1 className="text-5xl font-bold">
+                    Edit Project
+                </h1>
+
+                {/* title */}
+                <input
+                    type="text"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    className="w-full bg-[#111] border border-white/10 rounded-2xl px-6 py-5 text-2xl"
+                />
+
+                {/* thumbnail preview */}
+                {thumbnailImage && (
+
+                    <div className="relative w-full h-72 rounded-2xl overflow-hidden">
+
+                        <Image
+                            src={thumbnailImage}
+                            alt="Thumbnail"
+                            fill
+                            className="object-cover"
+                        />
+
+                    </div>
+
+                )}
+
+                {/* editor */}
+                <TiptapEditor
+                    content={content}
+                    onChange={setContent}
+                />
+
+                <button
+                    onClick={handleUpdate}
+                    disabled={loading}
+                    className="bg-white text-black px-8 py-4 rounded-full"
+                >
+                    {loading ? 'Updating...' : 'Update Project'}
+                </button>
+
+            </div>
+        </div>
+    );
+}

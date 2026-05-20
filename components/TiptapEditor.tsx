@@ -3,6 +3,7 @@
 import { EditorContent, useEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Image from '@tiptap/extension-image';
+import { useEffect } from 'react';
 
 type Props = {
   content: object;
@@ -33,6 +34,21 @@ export default function TiptapEditor({
       onChange(editor.getJSON());
     },
   });
+
+  useEffect(() => {
+
+    if (
+      editor &&
+      content &&
+      JSON.stringify(editor.getJSON()) !== JSON.stringify(content)
+    ) {
+
+      editor.commands.setContent(content);
+
+    }
+
+  }, [content, editor]);
+
 
   // image upload
   const addImage = async (
