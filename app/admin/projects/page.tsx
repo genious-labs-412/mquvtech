@@ -2,6 +2,8 @@ export const dynamic = 'force-dynamic';
 import Link from 'next/link';
 import Image from 'next/image';
 import { prisma } from '@/lib/prisma';
+import DeleteButton from '@/components/admin/DeleteButton';
+
 
 interface ContentBlock {
   type: string;
@@ -177,12 +179,12 @@ export default async function ProjectsPage() {
                     Edit
                   </Link>
 
-                  {/* Delete */}
-                  <button
-                    className="border border-red-500/30 text-red-400 px-4 py-2 rounded-xl text-sm hover:bg-red-500/10 transition"
-                  >
-                    Delete
-                  </button>
+{/* Delete */}
+<DeleteButton
+  id={project.id}
+  api="/api/projects"
+  message="Project deleted"
+/>
 
                 </div>
 
