@@ -2,141 +2,200 @@
 
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
+import { useParams } from 'next/navigation';
 import TiptapEditor from '@/components/TiptapEditor';
 import { JSONContent } from '@tiptap/react';
-import { useParams } from 'next/navigation';
 
 export default function EditProjectPage() {
 
-    const params = useParams();
+  const params = useParams();
 
-    const id = params.id;
+  const id = params.id as string;
 
-    const [title, setTitle] = useState('');
-    const [content, setContent] = useState<JSONContent>({
-  type: 'doc',
-  content: [],
-});
-    const [thumbnailImage, setThumbnailImage] = useState('');
+  const [title, setTitle] = useState('');
+  const [content, setContent] =
+    useState<JSONContent>({
+      type: 'doc',
+      content: [],
+    });
 
-    const [loading, setLoading] = useState(false);
+  const [thumbnailImage, setThumbnailImage] =
+    useState('');
 
-    // fetch project
-    useEffect(() => {
+  const [thumbnail, setThumbnail] =
+    useState<File | null>(null);
 
-        const fetchProject = async () => {
+  const [loading, setLoading] =
+    useState(false);
 
-            const res = await fetch(`/api/admin/projects/${id}`, {
-                cache: 'no-store',
-            })
+  // fetch project
+  useEffect(() => {
 
-            const data = await res.json();
+    async function fetchProject() {
 
-            setTitle(data.title);
-            setContent(data.content);
-            setThumbnailImage(data.thumbnailImage);
+      const res = await fetch(
+        `/api/admin/projects/${id}`
+      );
 
-        };
+      const data = await res.json();
 
-        if (id) {
-            fetchProject();
+      setTitle(data.title);
+
+      setContent(data.content);
+
+      setThumbnailImage(
+        data.thumbnailImage
+      );
+    }
+
+    if (id) {
+      fetchProject();
+    }
+
+  }, [id]);
+
+  // update project
+  const handleUpdate = async () => {
+
+    try {
+
+      setLoading(true);
+
+      let imageUrl = thumbnailImage;
+
+      // upload new thumbnail
+      if (thumbnail) {
+
+        const formData = new FormData();
+
+        formData.append('file', thumbnail);
+
+        const uploadRes = await fetch(
+          '/api/upload',
+          {
+            method: 'POST',
+            body: formData,
+          }
+        );
+
+        const uploadData =
+          await uploadRes.json();
+
+        imageUrl = uploadData.url;
+      }
+
+      // update project
+      const res = await fetch(
+        `/api/admin/projects/${id}`,
+        {
+          method: 'PUT',
+
+          headers: {
+            'Content-Type':
+              'application/json',
+          },
+
+          body: JSON.stringify({
+            title,
+            content,
+            thumbnailImage: imageUrl,
+          }),
         }
+      );
 
-    }, [id]);
+      const data = await res.json();
 
-    // update project
-    const handleUpdate = async () => {
+      console.log(data);
 
-        try {
+      alert('Project updated');
 
-            setLoading(true);
+    } catch (error) {
 
-            const res = await fetch(`/api/admin/projects/${id}`, {
+      console.log(error);
 
-                method: 'PUT',
+      alert('Something went wrong');
 
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+    } finally {
 
-                body: JSON.stringify({
-                    title,
-                    content,
-                    thumbnailImage,
-                }),
-            });
+      setLoading(false);
+    }
+  };
 
-            const data = await res.json();
+  return (
+    <div className="min-h-screen bg-black text-white p-10">
 
-            console.log(data);
+      <div className="max-w-5xl mx-auto space-y-8">
 
-            alert('Project Updated');
+        <h1 className="text-5xl font-bold">
+          Edit Project
+        </h1>
 
-        } catch (error) {
+        {/* Title */}
+        <input
+          type="text"
+          value={title}
+          onChange={(e) =>
+            setTitle(e.target.value)
+          }
+          className="w-full bg-[#111] border border-white/10 rounded-2xl px-6 py-5 text-2xl"
+        />
 
-            console.log(error);
+        {/* Thumbnail */}
+        <div className="space-y-4">
 
-            alert('Something went wrong');
+          <input
+            type="file"
+            accept="image/*"
+            onChange={(e) =>
+              setThumbnail(
+                e.target.files?.[0] || null
+              )
+            }
+          />
 
-        } finally {
+          {(thumbnailImage || thumbnail) && (
+            <div className="relative w-full h-72 rounded-2xl overflow-hidden">
 
-            setLoading(false);
-        }
-    };
-
-    return (
-
-        <div className="min-h-screen bg-black text-white p-10">
-
-            <div className="max-w-5xl mx-auto space-y-8">
-
-                <h1 className="text-5xl font-bold">
-                    Edit Project
-                </h1>
-
-                {/* title */}
-                <input
-                    type="text"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    className="w-full bg-[#111] border border-white/10 rounded-2xl px-6 py-5 text-2xl"
-                />
-
-                {/* thumbnail preview */}
-                {thumbnailImage && (
-
-                    <div className="relative w-full h-72 rounded-2xl overflow-hidden">
-
-                        <Image
-                            src={thumbnailImage}
-                            alt="Thumbnail"
-                            fill
-                            className="object-cover"
-                        />
-
-                    </div>
-
-                )}
-
-                {/* editor */}
-                <TiptapEditor
-                    content={content}
-                    onChange={(value) => {
-                        if (value !== null && typeof value !== 'string') {
-                            setContent(value as JSONContent);
-                        }
-                    }}
-                />
-
-                <button
-                    onClick={handleUpdate}
-                    disabled={loading}
-                    className="bg-white text-black px-8 py-4 rounded-full"
-                >
-                    {loading ? 'Updating...' : 'Update Project'}
-                </button>
+              <Image
+                src={
+                  thumbnail
+                    ? URL.createObjectURL(
+                        thumbnail
+                      )
+                    : thumbnailImage
+                }
+                alt="Thumbnail"
+                fill
+                sizes="100vw"
+                className="object-cover"
+              />
 
             </div>
+          )}
         </div>
-    );
+
+        {/* Editor */}
+        <TiptapEditor
+          content={content}
+          onChange={(value) =>
+            setContent(
+              value as JSONContent
+            )
+          }
+        />
+
+        {/* Button */}
+        <button
+          onClick={handleUpdate}
+          disabled={loading}
+          className="bg-white text-black px-8 py-4 rounded-full font-bold"
+        >
+          {loading
+            ? 'Updating...'
+            : 'Update Project'}
+        </button>
+
+      </div>
+    </div>
+  );
 }
