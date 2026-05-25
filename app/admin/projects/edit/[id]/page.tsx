@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import TiptapEditor from '@/components/TiptapEditor';
+import { JSONContent } from '@tiptap/react';
 import { useParams } from 'next/navigation';
 
 export default function EditProjectPage() {
@@ -12,7 +13,10 @@ export default function EditProjectPage() {
     const id = params.id;
 
     const [title, setTitle] = useState('');
-    const [content, setContent] = useState({});
+    const [content, setContent] = useState<JSONContent>({
+  type: 'doc',
+  content: [],
+});
     const [thumbnailImage, setThumbnailImage] = useState('');
 
     const [loading, setLoading] = useState(false);
@@ -22,7 +26,7 @@ export default function EditProjectPage() {
 
         const fetchProject = async () => {
 
-            const res = await fetch(`/api/projects/${id}`, {
+            const res = await fetch(`/api/admin/projects/${id}`, {
                 cache: 'no-store',
             })
 
@@ -47,7 +51,7 @@ export default function EditProjectPage() {
 
             setLoading(true);
 
-            const res = await fetch(`/api/projects/${id}`, {
+            const res = await fetch(`/api/admin/projects/${id}`, {
 
                 method: 'PUT',
 
@@ -117,7 +121,11 @@ export default function EditProjectPage() {
                 {/* editor */}
                 <TiptapEditor
                     content={content}
-                    onChange={setContent}
+                    onChange={(value) => {
+                        if (value !== null && typeof value !== 'string') {
+                            setContent(value as JSONContent);
+                        }
+                    }}
                 />
 
                 <button

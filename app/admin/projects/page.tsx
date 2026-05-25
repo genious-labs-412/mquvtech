@@ -182,7 +182,7 @@ export default async function ProjectsPage() {
 {/* Delete */}
 <DeleteButton
   id={project.id}
-  api="/api/projects"
+  api="/api/admin/projects"
   message="Project deleted"
 />
 

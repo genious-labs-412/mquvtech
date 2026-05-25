@@ -3,11 +3,16 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import TiptapEditor from '@/components/TiptapEditor';
+import { JSONContent } from '@tiptap/react';
+
 
 export default function CreateProjectPage() {
 
   const [title, setTitle] = useState('');
-  const [content, setContent] = useState({});
+  const [content, setContent] = useState<JSONContent>({
+    type: 'doc',
+    content: [],
+  });
   const [thumbnail, setThumbnail] = useState<File | null>(null);
 
   const [loading, setLoading] = useState(false);
@@ -38,7 +43,7 @@ export default function CreateProjectPage() {
       }
 
       // save project
-      const res = await fetch('/api/projects', {
+      const res = await fetch('/api/admin/projects', {
 
         method: 'POST',
 
@@ -172,7 +177,7 @@ export default function CreateProjectPage() {
           </label>
 
           <TiptapEditor
-            onChange={setContent}
+            onChange={(value) => setContent(value as JSONContent)}
             content={content}
           />
 
