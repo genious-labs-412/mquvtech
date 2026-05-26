@@ -74,3 +74,29 @@ export async function POST(req: NextRequest) {
   }
 }
 
+export async function GET() {
+  try {
+
+    const contacts = await prisma.contactDetails.findMany({
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+
+    return NextResponse.json({
+      success: true,
+      contacts,
+    });
+
+  } catch (error) {
+    console.log(error);
+
+    return NextResponse.json(
+      {
+        success: false,
+        message: 'Failed to fetch contacts',
+      },
+      { status: 500 }
+    );
+  }
+}
